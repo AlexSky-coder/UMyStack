@@ -7,8 +7,13 @@ interface
 uses
   Classes, SysUtils, syncobjs;
 
+const
+  strDateTypes: array of string =
+    ('dtNone', 'dtInt', 'dtFloat', 'dtBool', 'dtStr', 'dtPtr');
+
 type
   DateTypes = (dtNone, dtInt, dtFloat, dtBool, dtStr, dtPtr);
+
 
   TNode = record
     PrevNode: ^TNode;
@@ -39,7 +44,7 @@ type
     function popInt: int64;
     function popFloat: double;
     function popBool: boolean;
-    function popPointer: Pointer;
+    function popPtr: Pointer;
     function popStr: string;
     function peekInt: int64;
     function peekFloat: double;
@@ -51,6 +56,7 @@ type
     procedure Clear;
     function GetCount: integer;
     function GetCountChickens: integer;
+    function popToStr: string;
 
   end;
 
@@ -199,7 +205,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtInt then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtInt)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
 
     Node := lastNode;
     Move(Node^.Data, Value, SizeOf(int64));
@@ -223,7 +231,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtFloat then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtFloat)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
 
     Node := lastNode;
     Move(Node^.Data, Value, SizeOf(double));
@@ -247,7 +257,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtBool then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtBool)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
 
     Node := lastNode;
     Move(Node^.Data, Value, SizeOf(boolean));
@@ -261,7 +273,7 @@ begin
   end;
 end;
 
-function TStackNode.popPointer: Pointer;
+function TStackNode.popPtr: Pointer;
 var
   Node: PNode;
   Value: Pointer = nil;
@@ -272,7 +284,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtPtr then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtPtr)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
 
     Node := lastNode;
     Move(Node^.Data, Value, SizeOf(Pointer));
@@ -296,7 +310,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtStr then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtStr)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
     Value := '';
     Node := lastNode;
     Move(Node^.Data, Value, SizeOf(string));
@@ -317,7 +333,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtInt then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtInt)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
     Result := PInt64(lastNode^.Data)^;
   finally
     FLock.Leave;
@@ -331,7 +349,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtFloat then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtFloat)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
     Result := PDouble(lastNode^.Data)^;
   finally
     FLock.Leave;
@@ -345,7 +365,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtBool then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtBool)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
     Result := PBoolean(lastNode^.Data)^;
   finally
     FLock.Leave;
@@ -359,8 +381,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtPtr then
-      raise Exception.Create('Неверный тип!');
-    Result := PPointer(lastNode^.Data)^;
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtPtr)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
   finally
     FLock.Leave;
   end;
@@ -373,7 +396,9 @@ begin
     if isEmpty then
       raise Exception.Create('Стек пустой!');
     if lastNode^.TData <> dtStr then
-      raise Exception.Create('Неверный тип!');
+      raise Exception.Create('Неверный тип! Запрос на ' +
+        strDateTypes[Ord(dtStr)] + ', в стеке ' +
+        strDateTypes[Ord(lastNode^.TData)]);
     Result := PString(lastNode^.Data)^;
   finally
     FLock.Leave;
@@ -495,5 +520,17 @@ begin
   end;
 end;
 
+function TStackNode.popToStr: string;
+begin
+  case topType of
+    dtInt: Result := IntToStr(popInt);
+    dtFloat: Result := FloatToStr(popFloat,fs);
+    dtBool: Result := BoolToStr(popBool, 'True', 'False');
+    dtStr: Result := '"' + popStr + '"';
+    dtPtr: Result := BoolToStr(popPtr <> nil, 'Ptr', 'Nil');
+    else
+      Result := 'Неизвестный тип';
+  end;
+end;
 
 end.
