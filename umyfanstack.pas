@@ -1,4 +1,4 @@
-unit uMyFanStack;
+unit uSmartStack;
 
 {$mode ObjFPC}{$H+}
 
@@ -289,4 +289,5 @@ begin
 end;
 
 end.
+
 
