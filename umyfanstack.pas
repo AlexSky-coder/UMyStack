@@ -8,6 +8,10 @@ uses
   Classes, SysUtils, Math;
 
 type
+  EStackEmpty = class(Exception);
+  EStackIndexOutOfRange = class(Exception);
+
+type
   { tStackFan<TData> — универсальный класс стека с динамическим управлением памятью.
 
     Особенности:
@@ -187,7 +191,7 @@ end;
 function tStackFan.peek: TData;
 begin
   if IsEmpty then
-    raise Exception.Create('Стек пуст');
+    raise EStackEmpty.Create('Стек пуст');
   Result := FastPeek;
 end;
 
@@ -198,11 +202,11 @@ const
 begin
   // Проверка на пустой стек
   if IsEmpty then
-    raise Exception.Create(tp);
+    raise EStackEmpty.Create('Стек пуст');
 
   // Проверка диапазона индекса
   if (i < 0) or (i > FTopIndex) then
-    raise Exception.CreateFmt(tt, [i, FTopIndex]);
+    raise EStackIndexOutOfRange.CreateFmt(tt, [i, FTopIndex]);
 
   Result := FastPeekAt(i);
 end;
@@ -285,3 +289,4 @@ begin
 end;
 
 end.
+
